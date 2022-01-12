@@ -1,6 +1,7 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import colors from 'colors'
+import cors from 'cors'
 import morgan from 'morgan'
 import { errorHandler, notFound } from './api/v1/middlewares/errors.js'
 
@@ -12,6 +13,15 @@ dotenv.config()
 
 const app = express()
 app.use(express.json())
+
+app.use(
+  cors({
+    origin: [
+      'https://himilo-online-doctor-booking.vercel.app/',
+      'http://localhost:3000/',
+    ],
+  })
+)
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'))
