@@ -11,7 +11,7 @@ If you want to see how to send requests from a different _programming languages_
 Get all towns
 
 ```js
-http://localhost:9000/api/v1/towns
+https://hodb.herokuapp.com/api/v1/towns
 ```
 
 # **GET** Doctors
@@ -19,7 +19,7 @@ http://localhost:9000/api/v1/towns
 Get current active doctors
 
 ```js
-http://localhost:9000/api/v1/doctors
+https://hodb.herokuapp.com/api/v1/doctors
 ```
 
 # **GET** Search Patient
@@ -27,7 +27,7 @@ http://localhost:9000/api/v1/doctors
 Get a patient or patients by using `PatientID` or `Tel`
 
 ```js
-http://localhost:9000/api/v1/patients?search=p0001
+https://hodb.herokuapp.com/api/v1/patients?search=p0001
 ```
 
 ### **Params**
@@ -39,7 +39,7 @@ http://localhost:9000/api/v1/patients?search=p0001
 Assign existed patient to a doctor
 
 ```js
-http://localhost:9000/api/v1/patients/existing
+https://hodb.herokuapp.com/api/v1/patients/existing
 ```
 
 ### **Body**
@@ -60,7 +60,7 @@ http://localhost:9000/api/v1/patients/existing
 Create new patient and assign to a doctor
 
 ```js
-http://localhost:9000/api/v1/patients/new
+https://hodb.herokuapp.com/api/v1/patients/new
 ```
 
 ### **Body**
