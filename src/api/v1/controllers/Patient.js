@@ -99,7 +99,6 @@ const assignToDoctor = asyncHandler(async (req, res) => {
             .status(500)
             .json({ status: 'Failed', message: 'Invalid Patient ID' })
         }
-        console.log('PATIENT QUERY: PASSED')
 
         // Search for doctor
         request.query(doctorQuery, (err, doctor) => {
@@ -115,7 +114,6 @@ const assignToDoctor = asyncHandler(async (req, res) => {
               .status(500)
               .json({ status: 'Failed', message: 'Invalid Doctor ID' })
           }
-          console.log('DOCTOR QUERY: PASSED')
 
           const patientId = patient.recordset[0].PatientID
           const Tel = patient.recordset[0].Tel
@@ -124,29 +122,12 @@ const assignToDoctor = asyncHandler(async (req, res) => {
           const UserName = doctor.recordset[0].UserName
           const Status = 'Existing'
           const appDate = moment(AppointmentDate).format('YYYY-MM-DD')
-          const DateAdded = moment(new Date()).format(
-            'YYYY-MM-DD HH:mm:ss.SSSS'
-          )
+          const DateAdded = moment(new Date()).format('YYYY-MM-DD')
           const AddedBy = 'Himilo'
-
-          console.log({
-            patientId,
-            doctorId,
-            UserName,
-            PatientType,
-            Cost,
-            appDate: new Date(appDate),
-            Booked,
-            AddedBy,
-            DateAdded,
-            Tel,
-            Status,
-            BookingTel,
-          })
 
           const assignQuery = `
           INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
-          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, ${appDate}, ${Booked}, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
+          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${appDate}', ${Booked}, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
           `
 
           request.query(assignQuery, (err, assign) => {
@@ -232,14 +213,13 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
         const currentDate = moment(new Date()).format('YYYY-MM-DD')
         const AddedBy = 'Himilo'
-        const DateAdded = moment(new Date()).format('YYYY-MM-DD HH:mm:ss.SSSS')
+        const DateAdded = moment(AppointmentDate).format('YYYY-MM-DD')
+        const dateOfBirth = moment(DOB).format('YYYY-MM-DD')
 
         const newPatientQuery = `
         INSERT INTO Patients (PatientID, Name, Gender, Age, Town, Address, Tel, MaritalStatus, City, Date, DateAdded, AddedBy, DateUnit, DOB) 
-          VALUES ('${newPatientID}', '${Name}', '${Gender}', ${Age}, '${Town}', '${Address}', '${Tel}', '${MaritalStatus}', '${City}', ${currentDate}, '${DateAdded}', '${AddedBy}', '${DateUnit}', '${DOB}')
+          VALUES ('${newPatientID}', '${Name}', '${Gender}', ${Age}, '${Town}', '${Address}', '${Tel}', '${MaritalStatus}', '${City}', '${currentDate}', '${DateAdded}', '${AddedBy}', '${DateUnit}', '${dateOfBirth}')
           `
-
-        console.log({ newPatientQuery })
 
         // Search for doctor
         request.query(doctorQuery, (err, doctor) => {
@@ -255,7 +235,6 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
               .status(500)
               .json({ status: 'Failed', message: 'Invalid Doctor ID' })
           }
-          console.log('DOCTOR QUERY: PASSED')
 
           request.query(newPatientQuery, (err, patient) => {
             if (err) {
@@ -266,21 +245,15 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
               })
             }
 
-            console.log('ADD PATIENT QUERY: PASSED')
-
             const patientId = newPatientID
             const doctorId = DoctorID
             const Cost = doctor.recordset[0].Cost
             const UserName = doctor.recordset[0].UserName
             const Status = 'New'
-            const appDate = moment(AppointmentDate).format('YYYY-MM-DD')
-            const DateAdded = moment(new Date()).format(
-              'YYYY-MM-DD HH:mm:ss.SSSS'
-            )
 
             const assignQuery = `
           INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
-          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, ${appDate}, ${Booked}, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
+          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${currentDate}', ${Booked}, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
           `
 
             request.query(assignQuery, (err, assign) => {
