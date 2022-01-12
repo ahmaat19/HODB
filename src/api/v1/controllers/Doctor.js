@@ -14,7 +14,7 @@ const getDoctors = asyncHandler(async (req, res) => {
       const today = moment().format('dddd')
       const request = new sql.Request()
       const query = `
-      SELECT * FROM Doctors
+      SELECT DoctorID, Name, Gender, Specialization, Cost, UserName FROM Doctors
       WHERE Active = 'Yes' AND Doctor = 'Yes' AND WorkingDays LIKE '%${today}%'
       `
       request.query(query, (err, result) => {
@@ -24,17 +24,10 @@ const getDoctors = asyncHandler(async (req, res) => {
             .status(500)
             .json({ status: 'Failed', message: err.originalError.info.message })
         }
-        const doctors =
-          result &&
-          result.recordset.map((doctor) => ({
-            DoctorID: doctor.DoctorID,
-            Name: doctor.Name,
-            Gender: doctor.Gender,
-            Specialization: doctor.Specialization,
-            Cost: doctor.Cost,
-            UserName: doctor.UserName,
-          }))
-        return res.status(200).json({ total: doctors.length, doctors })
+
+        return res
+          .status(200)
+          .json({ total: result.recordset.length, doctors: result.recordset })
       })
     })
   } catch (error) {

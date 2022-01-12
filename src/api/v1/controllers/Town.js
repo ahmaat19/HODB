@@ -11,7 +11,7 @@ const getTowns = asyncHandler(async (req, res) => {
       }
 
       const request = new sql.Request()
-      const query = `SELECT * FROM Town`
+      const query = `SELECT TownID, Town FROM Town`
       request.query(query, (err, result) => {
         if (err) {
           console.log(err)
@@ -20,13 +20,9 @@ const getTowns = asyncHandler(async (req, res) => {
             .json({ status: 'Failed', message: err.originalError.info.message })
         }
 
-        const towns =
-          result &&
-          result.recordset.map((town) => ({
-            TownID: town.TownID,
-            Town: town.Town,
-          }))
-        return res.status(200).json({ total: towns.length, towns })
+        return res
+          .status(200)
+          .json({ total: result.recordset.length, towns: result.recordset })
       })
     })
   } catch (error) {
