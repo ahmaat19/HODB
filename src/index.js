@@ -16,10 +16,7 @@ app.use(express.json())
 
 app.use(
   cors({
-    origin: [
-      'https://himilo-online-doctor-booking.vercel.app/',
-      'http://localhost:3000/',
-    ],
+    origin: '*',
   })
 )
 
