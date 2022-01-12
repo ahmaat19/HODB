@@ -14,7 +14,7 @@ const getDoctors = asyncHandler(async (req, res) => {
       const today = moment().format('dddd')
       const request = new sql.Request()
       const query = `
-      SELECT DoctorID, Name, Gender, Specialization, Cost, UserName FROM Doctors
+      SELECT DoctorID, Name, Gender, Specialization, Cost, UserName, DoctorNo, OnlineDoctorNo FROM Doctors
       WHERE Active = 'Yes' AND Doctor = 'Yes' AND WorkingDays LIKE '%${today}%'
       `
       request.query(query, (err, result) => {
