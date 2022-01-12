@@ -11,20 +11,19 @@ import Patient from './api/v1/routes/Patient.js'
 dotenv.config()
 
 const app = express()
-
-app.use('/api/v1/towns', Town)
-app.use('/api/v1/doctors', Doctor)
-app.use('/api/v1/patients', Patient)
+app.use(express.json())
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'))
 }
 
-app.use(express.json())
-
 app.get('/', async (req, res) => {
   res.send('API is running')
 })
+
+app.use('/api/v1/towns', Town)
+app.use('/api/v1/doctors', Doctor)
+app.use('/api/v1/patients', Patient)
 
 app.use(notFound)
 

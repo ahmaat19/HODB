@@ -5,10 +5,10 @@ import config from '../../../../utils/dbConfig.js'
 
 const getDoctors = asyncHandler(async (req, res) => {
   try {
-    sql.connect(config, (err) => {
-      if (err) {
-        console.log(err)
-        res.status(500).send(err)
+    sql.connect(config, (error) => {
+      if (error) {
+        console.log(error)
+        return res.status(500).send(error)
       }
 
       const today = moment().format('dddd')
@@ -20,26 +20,26 @@ const getDoctors = asyncHandler(async (req, res) => {
       request.query(query, (err, result) => {
         if (err) {
           console.log(err)
-          res
+          return res
             .status(500)
             .json({ status: 'Failed', message: err.originalError.info.message })
         }
         const doctors =
           result &&
           result.recordset.map((doctor) => ({
-            id: doctor.DoctorID,
-            name: doctor.Name,
-            gender: doctor.Gender,
-            specialization: doctor.Specialization,
-            cost: doctor.Cost,
-            username: doctor.UserName,
+            DoctorID: doctor.DoctorID,
+            Name: doctor.Name,
+            Gender: doctor.Gender,
+            Specialization: doctor.Specialization,
+            Cost: doctor.Cost,
+            UserName: doctor.UserName,
           }))
-        res.status(200).json({ total: doctors.length, doctors })
+        return res.status(200).json({ total: doctors.length, doctors })
       })
     })
   } catch (error) {
     console.log(error)
-    res.status(500).send(error)
+    return res.status(500).send(error)
   }
 })
 
