@@ -24,25 +24,52 @@ const searchPatient = asyncHandler(async (req, res) => {
       SELECT PatientID, Name, Gender, Tel, Status, Age, DateUnit, DOB FROM Patients
       WHERE PatientID = '${search}' OR Tel = '${search}'
       `
-      request.query(query, (err, result) => {
+      const internetQuery = `SELECT InternetDate FROM InternetConnection`
+      request.query(internetQuery, (err, internet) => {
         if (err) {
           console.log(err)
           return res
             .status(500)
             .json({ status: 'Failed', message: err.originalError.info.message })
         }
-        const patients =
-          result &&
-          result.recordset.map((patient) => ({
-            PatientID: patient.PatientID,
-            Name: patient.Name,
-            Gender: patient.Gender,
-            Tel: patient.Tel,
-            Status: patient.Status,
-            Age: patient.Age + ' ' + patient.DateUnit,
-            DOB: patient.DOB,
-          }))
-        return res.status(200).json({ total: patients.length, patients })
+        if (internet && internet.recordset.length === 0) {
+          return res
+            .status(500)
+            .json({ status: 'Failed', message: 'Invalid Internet Connection' })
+        }
+        const internetDate = internet.recordset[0].InternetDate
+        const currentDate = moment(new Date())
+        const offlineMinutes = currentDate.diff(internetDate, 'minutes') + 180
+
+        if (offlineMinutes > 5) {
+          return res.status(500).json({
+            status: 'Failed',
+            message:
+              'We have detected issues with the hospital internet connection.',
+          })
+        }
+
+        request.query(query, (err, result) => {
+          if (err) {
+            console.log(err)
+            return res.status(500).json({
+              status: 'Failed',
+              message: err.originalError.info.message,
+            })
+          }
+          const patients =
+            result &&
+            result.recordset.map((patient) => ({
+              PatientID: patient.PatientID,
+              Name: patient.Name,
+              Gender: patient.Gender,
+              Tel: patient.Tel,
+              Status: patient.Status,
+              Age: patient.Age + ' ' + patient.DateUnit,
+              DOB: patient.DOB,
+            }))
+          return res.status(200).json({ total: patients.length, patients })
+        })
       })
     })
   } catch (error) {
@@ -86,22 +113,32 @@ const assignToDoctor = asyncHandler(async (req, res) => {
       SELECT DoctorID, Cost, UserName FROM Doctors
       WHERE DoctorID = '${DoctorID}' AND  Active = 'Yes' AND Doctor = 'Yes' AND WorkingDays LIKE '%${today}%'
       `
-      // Search for patient
-      request.query(patientQuery, (err, patient) => {
+      const internetQuery = `SELECT InternetDate FROM InternetConnection`
+      request.query(internetQuery, (err, internet) => {
         if (err) {
           console.log(err)
           return res
             .status(500)
             .json({ status: 'Failed', message: err.originalError.info.message })
         }
-        if (patient && patient.recordset.length === 0) {
+        if (internet && internet.recordset.length === 0) {
           return res
             .status(500)
-            .json({ status: 'Failed', message: 'Invalid Patient ID' })
+            .json({ status: 'Failed', message: 'Invalid Internet Connection' })
         }
+        const internetDate = internet.recordset[0].InternetDate
+        const currentDate = moment(new Date())
+        const offlineMinutes = currentDate.diff(internetDate, 'minutes') + 180
 
-        // Search for doctor
-        request.query(doctorQuery, (err, doctor) => {
+        if (offlineMinutes > 5) {
+          return res.status(500).json({
+            status: 'Failed',
+            message:
+              'We have detected issues with the hospital internet connection.',
+          })
+        }
+        // Search for patient
+        request.query(patientQuery, (err, patient) => {
           if (err) {
             console.log(err)
             return res.status(500).json({
@@ -109,28 +146,14 @@ const assignToDoctor = asyncHandler(async (req, res) => {
               message: err.originalError.info.message,
             })
           }
-          if (doctor && doctor.recordset.length === 0) {
+          if (patient && patient.recordset.length === 0) {
             return res
               .status(500)
-              .json({ status: 'Failed', message: 'Invalid Doctor ID' })
+              .json({ status: 'Failed', message: 'Invalid Patient ID' })
           }
 
-          const patientId = patient.recordset[0].PatientID
-          const Tel = patient.recordset[0].Tel
-          const doctorId = doctor.recordset[0].DoctorID
-          const Cost = doctor.recordset[0].Cost
-          const UserName = doctor.recordset[0].UserName
-          const Status = 'Existing'
-          const appDate = moment(AppointmentDate).format('YYYY-MM-DD')
-          const DateAdded = moment(new Date()).format('YYYY-MM-DD')
-          const AddedBy = 'Himilo'
-
-          const assignQuery = `
-          INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
-          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${appDate}', ${Booked}, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
-          `
-
-          request.query(assignQuery, (err, assign) => {
+          // Search for doctor
+          request.query(doctorQuery, (err, doctor) => {
             if (err) {
               console.log(err)
               return res.status(500).json({
@@ -138,10 +161,40 @@ const assignToDoctor = asyncHandler(async (req, res) => {
                 message: err.originalError.info.message,
               })
             }
+            if (doctor && doctor.recordset.length === 0) {
+              return res
+                .status(500)
+                .json({ status: 'Failed', message: 'Invalid Doctor ID' })
+            }
 
-            return res.status(201).json({
-              status: 'Success',
-              message: 'Patient Assigned to Doctor Successfully',
+            const patientId = patient.recordset[0].PatientID
+            const Tel = patient.recordset[0].Tel
+            const doctorId = doctor.recordset[0].DoctorID
+            const Cost = doctor.recordset[0].Cost
+            const UserName = doctor.recordset[0].UserName
+            const Status = 'Existing'
+            const appDate = moment(AppointmentDate).format('YYYY-MM-DD')
+            const DateAdded = moment(new Date()).format('YYYY-MM-DD')
+            const AddedBy = 'Himilo'
+
+            const assignQuery = `
+          INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
+          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${appDate}', ${Booked}, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
+          `
+
+            request.query(assignQuery, (err, assign) => {
+              if (err) {
+                console.log(err)
+                return res.status(500).json({
+                  status: 'Failed',
+                  message: err.originalError.info.message,
+                })
+              }
+
+              return res.status(201).json({
+                status: 'Success',
+                message: 'Patient Assigned to Doctor Successfully',
+              })
             })
           })
         })
@@ -194,49 +247,64 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
       SELECT * FROM Doctors
       WHERE DoctorID = '${DoctorID}' AND  Active = 'Yes' AND Doctor = 'Yes' AND WorkingDays LIKE '%${today}%'
       `
-      // Search for patient
-      request.query(lastRecordQuery, (err, lastRecord) => {
+
+      const internetQuery = `SELECT InternetDate FROM InternetConnection`
+      request.query(internetQuery, (err, internet) => {
         if (err) {
           console.log(err)
           return res
             .status(500)
             .json({ status: 'Failed', message: err.originalError.info.message })
         }
-        if (lastRecord && lastRecord.recordset.length === 0) {
+        if (internet && internet.recordset.length === 0) {
           return res
             .status(500)
-            .json({ status: 'Failed', message: 'Invalid Patient ID' })
+            .json({ status: 'Failed', message: 'Invalid Internet Connection' })
         }
+        const internetDate = internet.recordset[0].InternetDate
+        const currentDate = moment(new Date())
+        const offlineMinutes = currentDate.diff(internetDate, 'minutes') + 180
 
-        const lastPatientID = lastRecord.recordset[0].PatientID.slice(1)
-        const newPatientID = `P${Number(lastPatientID) + 1}`
-
-        const currentDate = moment(new Date()).format('YYYY-MM-DD')
-        const AddedBy = 'Himilo'
-        const DateAdded = moment(AppointmentDate).format('YYYY-MM-DD')
-        const dateOfBirth = moment(DOB).format('YYYY-MM-DD')
-
-        const newPatientQuery = `
-        INSERT INTO Patients (PatientID, Name, Gender, Age, Town, Address, Tel, MaritalStatus, City, Date, DateAdded, AddedBy, DateUnit, DOB) 
-          VALUES ('${newPatientID}', '${Name}', '${Gender}', ${Age}, '${Town}', '${Address}', '${Tel}', '${MaritalStatus}', '${City}', '${currentDate}', '${DateAdded}', '${AddedBy}', '${DateUnit}', '${dateOfBirth}')
-          `
-
-        // Search for doctor
-        request.query(doctorQuery, (err, doctor) => {
+        if (offlineMinutes > 5) {
+          return res.status(500).json({
+            status: 'Failed',
+            message:
+              'We have detected issues with the hospital internet connection.',
+          })
+        }
+        // Search for patient
+        request.query(lastRecordQuery, (err, lastRecord) => {
           if (err) {
             console.log(err)
-            return res.status(500).json({
-              status: 'Failed',
-              message: err.originalError.info.message,
-            })
-          }
-          if (doctor && doctor.recordset.length === 0) {
             return res
               .status(500)
-              .json({ status: 'Failed', message: 'Invalid Doctor ID' })
+              .json({
+                status: 'Failed',
+                message: err.originalError.info.message,
+              })
+          }
+          if (lastRecord && lastRecord.recordset.length === 0) {
+            return res
+              .status(500)
+              .json({ status: 'Failed', message: 'Invalid Patient ID' })
           }
 
-          request.query(newPatientQuery, (err, patient) => {
+          const lastPatientID = lastRecord.recordset[0].PatientID.slice(1)
+          const newPatientID = `P${Number(lastPatientID) + 1}`
+          const newTempID = `T${Number(lastPatientID) + 1}`
+
+          const currentDate = moment(new Date()).format('YYYY-MM-DD')
+          const AddedBy = 'Himilo'
+          const DateAdded = moment(AppointmentDate).format('YYYY-MM-DD')
+          const dateOfBirth = moment(DOB).format('YYYY-MM-DD')
+
+          const newPatientQuery = `
+        INSERT INTO Patients (PatientID, Name, Gender, Age, Town, Address, Tel, MaritalStatus, City, Date, DateAdded, AddedBy, DateUnit, DOB, TempID) 
+          VALUES ('${newPatientID}', '${Name}', '${Gender}', ${Age}, '${Town}', '${Address}', '${Tel}', '${MaritalStatus}', '${City}', '${currentDate}', '${DateAdded}', '${AddedBy}', '${DateUnit}', '${dateOfBirth}', '${newTempID}')
+          `
+
+          // Search for doctor
+          request.query(doctorQuery, (err, doctor) => {
             if (err) {
               console.log(err)
               return res.status(500).json({
@@ -244,19 +312,13 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
                 message: err.originalError.info.message,
               })
             }
+            if (doctor && doctor.recordset.length === 0) {
+              return res
+                .status(500)
+                .json({ status: 'Failed', message: 'Invalid Doctor ID' })
+            }
 
-            const patientId = newPatientID
-            const doctorId = DoctorID
-            const Cost = doctor.recordset[0].Cost
-            const UserName = doctor.recordset[0].UserName
-            const Status = 'New'
-
-            const assignQuery = `
-          INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
-          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${currentDate}', ${Booked}, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
-          `
-
-            request.query(assignQuery, (err, assign) => {
+            request.query(newPatientQuery, (err, patient) => {
               if (err) {
                 console.log(err)
                 return res.status(500).json({
@@ -265,9 +327,30 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
                 })
               }
 
-              return res.status(201).json({
-                status: 'Success',
-                message: 'Patient Assigned to Doctor Successfully',
+              const patientId = newPatientID
+              const doctorId = DoctorID
+              const Cost = doctor.recordset[0].Cost
+              const UserName = doctor.recordset[0].UserName
+              const Status = 'New'
+
+              const assignQuery = `
+          INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
+          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${currentDate}', ${Booked}, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
+          `
+
+              request.query(assignQuery, (err, assign) => {
+                if (err) {
+                  console.log(err)
+                  return res.status(500).json({
+                    status: 'Failed',
+                    message: err.originalError.info.message,
+                  })
+                }
+
+                return res.status(201).json({
+                  status: 'Success',
+                  message: 'Patient Assigned to Doctor Successfully',
+                })
               })
             })
           })
