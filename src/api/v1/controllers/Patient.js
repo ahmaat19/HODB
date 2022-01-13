@@ -179,7 +179,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
 
             const assignQuery = `
           INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
-          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${appDate}', ${Booked}, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
+          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${appDate}', 'Null', '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
           `
 
             request.query(assignQuery, (err, assign) => {
@@ -276,12 +276,10 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
         request.query(lastRecordQuery, (err, lastRecord) => {
           if (err) {
             console.log(err)
-            return res
-              .status(500)
-              .json({
-                status: 'Failed',
-                message: err.originalError.info.message,
-              })
+            return res.status(500).json({
+              status: 'Failed',
+              message: err.originalError.info.message,
+            })
           }
           if (lastRecord && lastRecord.recordset.length === 0) {
             return res
@@ -290,7 +288,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
           }
 
           const lastPatientID = lastRecord.recordset[0].PatientID.slice(1)
-          const newPatientID = `P${Number(lastPatientID) + 1}`
+          const newPatientID = `T${Number(lastPatientID) + 1}`
           const newTempID = `T${Number(lastPatientID) + 1}`
 
           const currentDate = moment(new Date()).format('YYYY-MM-DD')
@@ -335,7 +333,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
               const assignQuery = `
           INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
-          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${currentDate}', ${Booked}, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
+          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${currentDate}', 'Null', '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
           `
 
               request.query(assignQuery, (err, assign) => {
