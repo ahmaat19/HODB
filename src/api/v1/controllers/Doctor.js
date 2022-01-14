@@ -35,12 +35,11 @@ const getDoctors = asyncHandler(async (req, res) => {
         const offlineMinutes = currentDate.diff(internetDate, 'minutes') + 180
 
         if (offlineMinutes > 5) {
-          throw new Error('Internet Connection Lost')
-          // return res.status(503).json({
-          //   status: 'Failed',
-          //   message:
-          //     'We have detected issues with the hospital internet connection.',
-          // })
+          return res.status(500).send({
+            status: 'Failed',
+            message:
+              'We have detected issues with the hospital internet connection.',
+          })
         }
 
         request.query(query, (err, result) => {
