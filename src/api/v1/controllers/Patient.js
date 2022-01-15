@@ -174,7 +174,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
             const UserName = doctor.recordset[0].UserName
             const Status = 'Existing'
             const appDate = moment(AppointmentDate).format('YYYY-MM-DD')
-            const DateAdded = moment(new Date()).format('YYYY-MM-DD')
+            const DateAdded = moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
             const AddedBy = 'Himilo'
 
             const assignQuery = `
@@ -290,14 +290,14 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
           const newPatientID = `T${Number(lastPatientID) + 1}`
           const newTempID = `T${Number(lastPatientID) + 1}`
 
-          const currentDate = moment(new Date()).format('YYYY-MM-DD')
+          const DateAdded = moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
+          console.log({ DateAdded })
           const AddedBy = 'Himilo'
-          const DateAdded = moment(AppointmentDate).format('YYYY-MM-DD')
           const dateOfBirth = moment(DOB).format('YYYY-MM-DD')
 
           const newPatientQuery = `
         INSERT INTO Patients (PatientID, Name, Gender, Age, Town, Tel, MaritalStatus, City, Date, DateAdded, AddedBy, DateUnit, DOB, TempID) 
-          VALUES ('${newPatientID}', '${Name}', '${Gender}', ${Age}, '${Town}', '${Tel}', '${MaritalStatus}', '${City}', '${currentDate}', '${DateAdded}', '${AddedBy}', '${DateUnit}', '${dateOfBirth}', '${newTempID}')
+          VALUES ('${newPatientID}', '${Name}', '${Gender}', ${Age}, '${Town}', '${Tel}', '${MaritalStatus}', '${City}', '${AppointmentDate}', '${DateAdded}', '${AddedBy}', '${DateUnit}', '${dateOfBirth}', '${newTempID}')
           `
 
           // Search for doctor
@@ -332,8 +332,9 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
               const assignQuery = `
           INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
-          VALUES ('${newPatientID}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${currentDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
+          VALUES ('${newPatientID}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${AppointmentDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
           `
+              console.log({ assignQuery })
 
               request.query(assignQuery, (err, assign) => {
                 if (err) {
