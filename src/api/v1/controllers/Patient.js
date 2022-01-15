@@ -332,7 +332,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
               const assignQuery = `
           INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
-          VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${currentDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
+          VALUES ('${newPatientID}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${currentDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
           `
 
               request.query(assignQuery, (err, assign) => {
