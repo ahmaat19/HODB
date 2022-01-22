@@ -1,4 +1,3 @@
-import expressAsyncHandler from 'express-async-handler'
 import moment from 'moment'
 import sql from 'mssql'
 import config from '../../../../utils/dbConfig.js'
