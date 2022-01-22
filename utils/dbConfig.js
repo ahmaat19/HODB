@@ -43,20 +43,31 @@ export default function config(hospital) {
         password: process.env.LADNAAN_DB_PASSWORD,
         server: process.env.LADNAAN_DB_SERVER,
         database: process.env.LADNAAN_DB_NAME,
-        port: Number(process.env.LADNAAN_DB_PORT),
+        pool: {
+          max: 10,
+          min: 0,
+          idleTimeoutMillis: 30000,
+        },
         options: {
-          encrypt: false,
+          encrypt: true,
+          trustServerCertificate: true,
         },
       }
+
     case 'durdur':
       return {
         user: process.env.DURDUR_DB_USER,
         password: process.env.DURDUR_DB_PASSWORD,
         server: process.env.DURDUR_DB_SERVER,
         database: process.env.DURDUR_DB_NAME,
-        port: Number(process.env.DURDUR_DB_PORT),
+        pool: {
+          max: 10,
+          min: 0,
+          idleTimeoutMillis: 30000,
+        },
         options: {
-          encrypt: false,
+          encrypt: true,
+          trustServerCertificate: true,
         },
       }
 

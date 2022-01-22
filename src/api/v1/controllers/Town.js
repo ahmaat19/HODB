@@ -1,37 +1,22 @@
 import asyncHandler from 'express-async-handler'
-
 import sql from 'mssql'
 import config from '../../../../utils/dbConfig.js'
 
 const getTowns = asyncHandler(async (req, res) => {
+  const hospital = req.query.hospital
+
   try {
-    const hospital = req.query.hospital
-    sql.connect(config(hospital), (error) => {
-      if (error) {
-        console.log(error)
-        return res.status(500).send(error)
-      }
+    await sql.connect(config(hospital))
+    const q = `SELECT TownID, Town FROM Town`
+    const result = await sql.query(q)
 
-      const request = new sql.Request()
-      const query = `SELECT TownID, Town FROM Town`
-
-      request.query(query, (err, result) => {
-        if (err) {
-          console.log(err)
-          return res.status(500).json({
-            status: 500,
-            message: err.originalError.info.message,
-          })
-        }
-
-        return res
-          .status(200)
-          .json({ total: result.recordset.length, towns: result.recordset })
-      })
+    res.json({ total: result.recordset.length, towns: result.recordset })
+    await sql.close()
+  } catch (err) {
+    res.status(500).json({
+      status: 500,
+      message: err.originalError.info.message,
     })
-  } catch (error) {
-    console.log(error)
-    return res.status(500).send(error)
   }
 })
 

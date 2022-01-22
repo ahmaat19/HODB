@@ -3,44 +3,41 @@ import moment from 'moment'
 import sql from 'mssql'
 import config from '../../../../utils/dbConfig.js'
 
-export const internetCheck = (req, res, next) => {
+export const internetCheck = async (req, res, next) => {
   const hospital = req.query.hospital
-  sql.connect(config(hospital), (error) => {
-    if (error) {
-      console.log(error)
-      return res.status(500).send(error)
-    }
 
-    const request = new sql.Request()
+  try {
+    await sql.connect(config(hospital))
+
     const internetQuery = `SELECT InternetDate FROM InternetConnection`
+    const internet = await sql.query(internetQuery)
 
-    request.query(internetQuery, (err, internet) => {
-      if (err) {
-        console.log(err)
-        return res
-          .status(500)
-          .json({ status: 500, message: err.originalError.info.message })
-      }
-      if (internet && internet.recordset.length === 0) {
-        return res
-          .status(500)
-          .json({ status: 500, message: 'Invalid Internet Connection' })
-      }
-      const internetDate = internet.recordset[0].InternetDate
-      const currentDate = moment(new Date())
-      const offlineMinutes = currentDate.diff(internetDate, 'minutes') + 180
-      console.log(internet && internet.recordset)
-      if (offlineMinutes > 5) {
-        return res.status(500).json({
-          status: 500,
-          message:
-            'We have detected issues with the hospital internet connection.',
-        })
-      } else {
-        return next()
-      }
+    if (internet && internet.recordset.length === 0) {
+      return res
+        .status(500)
+        .json({ status: 500, message: 'Invalid Internet Connection' })
+    }
+    const internetDate = internet.recordset[0].InternetDate
+    const currentDate = moment(new Date())
+    const offlineMinutes = currentDate.diff(internetDate, 'minutes') + 180
+
+    if (offlineMinutes > 5) {
+      await sql.close()
+      return res.status(500).json({
+        status: 500,
+        message:
+          'We have detected issues with the hospital internet connection.',
+      })
+    } else {
+      await sql.close()
+      return next()
+    }
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: err.originalError.info.message,
     })
-  })
+  }
 }
 
 export const auth = async (req, res, next) => {
@@ -51,45 +48,30 @@ export const auth = async (req, res, next) => {
     const apiKey = req.query.apiKey
     const hospital = req.query.hospital
 
-    console.log({ CONGIGGGGGGGGGG: config(hospital) })
-
     if (config(hospital).database === 'invalid') {
       return res.status(500).json({ status: 500, message: 'Invalid hospital' })
     }
 
-    sql.connect(config(hospital), (error) => {
-      if (error) {
-        console.log(error)
-        return res.status(500).send(error)
-      }
+    await sql.connect(config(hospital))
+    const q = `SELECT * FROM Agent`
+    const agent = await sql.query(q)
 
-      const request = new sql.Request()
-      const agency = 'SELECT * FROM Agent'
+    if (agent && agent.recordset.length === 0) {
+      return res
+        .status(500)
+        .json({ status: 500, message: 'API key is missing or invalid' })
+    }
 
-      request.query(agency, (err, agent) => {
-        if (err) {
-          console.log(err)
-          return res
-            .status(500)
-            .json({ status: 500, message: err.originalError.info.message })
-        }
-        if (agent && agent.recordset.length === 0) {
-          return res
-            .status(500)
-            .json({ status: 500, message: 'API key is missing or invalid' })
-        }
+    const singleAgent = agent.recordset[0]
 
-        const singleAgent = agent.recordset[0]
-
-        if (singleAgent.Apikey === apiKey) {
-          return next()
-        }
-
-        return res
-          .status(401)
-          .json({ status: 401, message: 'API key is missing or invalid' })
-      })
-    })
+    if (singleAgent.Apikey === apiKey) {
+      await sql.close()
+      return next()
+    }
+    await sql.close()
+    return res
+      .status(401)
+      .json({ status: 401, message: 'API key is missing or invalid' })
   } catch (error) {
     return res.status(500).send(error)
   }
