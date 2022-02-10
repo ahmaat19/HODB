@@ -26,6 +26,15 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'))
 }
 
+app.use(function (req, res, next) {
+  res.setTimeout(60000, function () {
+    console.log('Request has timed out.')
+    res.status(408).json({ status: 408, message: 'Request has timed out.' })
+  })
+
+  next()
+})
+
 app.use('/api/v1/dealers', Dealer)
 
 app.use(auth)

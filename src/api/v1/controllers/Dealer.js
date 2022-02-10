@@ -33,9 +33,10 @@ const getDealers = asyncHandler(async (req, res) => {
 
 const getDealer = asyncHandler(async (req, res) => {
   const id = req.params.id
+  const code = Number(id)
   try {
     await sql.connect(db)
-    const q = `SELECT * FROM Dealers WHERE Code = ${id}`
+    const q = `SELECT * FROM Dealers WHERE Code = ${code}`
     const result = await sql.query(q)
 
     if (result.recordset.length === 0) {

@@ -1,6 +1,20 @@
 import moment from 'moment'
 import sql from 'mssql'
 import config from '../../../../utils/dbConfig.js'
+import dotenv from 'dotenv'
+
+dotenv.config()
+const db = {
+  user: process.env.DEALER_DB_USER,
+  password: process.env.DEALER_DB_PASSWORD,
+  server: process.env.DEALER_DB_SERVER,
+  database: process.env.DEALER_DB_NAME,
+  port: Number(process.env.GLOBAL_DB_PORT),
+  options: {
+    encrypt: true,
+    trustServerCertificate: true,
+  },
+}
 
 export const internetCheck = async (req, res, next) => {
   const hospital = req.query.hospital
@@ -51,7 +65,7 @@ export const auth = async (req, res, next) => {
       return res.status(500).json({ status: 500, message: 'Invalid hospital' })
     }
 
-    await sql.connect(config(hospital))
+    await sql.connect(db)
     const q = `SELECT * FROM Agent`
     const agent = await sql.query(q)
 
@@ -61,16 +75,19 @@ export const auth = async (req, res, next) => {
         .json({ status: 500, message: 'API key is missing or invalid' })
     }
 
-    const singleAgent = agent.recordset[0]
+    const singleAgent = agent.recordset
 
-    if (singleAgent.Apikey === apiKey) {
+    const keys = singleAgent && singleAgent.map((s) => s.Apikey)
+
+    if (keys && keys.includes(apiKey)) {
       await sql.close()
       return next()
+    } else {
+      await sql.close()
+      return res
+        .status(401)
+        .json({ status: 401, message: 'API key is missing or invalid' })
     }
-    await sql.close()
-    return res
-      .status(401)
-      .json({ status: 401, message: 'API key is missing or invalid' })
   } catch (error) {
     return res.status(500).send(error)
   }
