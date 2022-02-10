@@ -84,10 +84,10 @@ export const auth = async (req, res, next) => {
     const keys = singleAgent && singleAgent.map((s) => s.Apikey)
 
     if (keys && keys.includes(apiKey)) {
-      await sql.close()
+      await sql.close(db)
       return next()
     } else {
-      await sql.close()
+      await sql.close(db)
       return res
         .status(401)
         .json({ status: 401, message: 'API key is missing or invalid' })
