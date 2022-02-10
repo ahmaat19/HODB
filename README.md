@@ -11,7 +11,7 @@ If you want to see how to send requests from a different _programming languages_
 Get all towns
 
 ```js
-https://hodb.herokuapp.com/api/v1/towns
+https://himiloapi.com/api/v1/towns
 ```
 
 # **GET** Doctors
@@ -19,7 +19,7 @@ https://hodb.herokuapp.com/api/v1/towns
 Get current active doctors
 
 ```js
-https://hodb.herokuapp.com/api/v1/doctors
+https://himiloapi.com/api/v1/doctors
 ```
 
 # **GET** Search Patient
@@ -27,7 +27,7 @@ https://hodb.herokuapp.com/api/v1/doctors
 Get a patient or patients by using `PatientID` or `Tel`
 
 ```js
-https://hodb.herokuapp.com/api/v1/patients?search=p0001
+https://himiloapi.com/api/v1/patients?search=p0001
 ```
 
 ### **Params**
@@ -39,7 +39,7 @@ https://hodb.herokuapp.com/api/v1/patients?search=p0001
 Assign existed patient to a doctor
 
 ```js
-https://hodb.herokuapp.com/api/v1/patients/existing
+https://himiloapi.com/api/v1/patients/existing
 ```
 
 ### **Body**
@@ -60,7 +60,7 @@ https://hodb.herokuapp.com/api/v1/patients/existing
 Create new patient and assign to a doctor
 
 ```js
-https://hodb.herokuapp.com/api/v1/patients/new
+https://himiloapi.com/api/v1/patients/new
 ```
 
 ### **Body**

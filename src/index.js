@@ -8,6 +8,7 @@ import { errorHandler, notFound } from './api/v1/middlewares/errors.js'
 import Town from './api/v1/routes/Town.js'
 import Doctor from './api/v1/routes/Doctor.js'
 import Patient from './api/v1/routes/Patient.js'
+import Dealer from './api/v1/routes/Dealer.js'
 import { auth, internetCheck } from './api/v1/middlewares/auth.js'
 
 dotenv.config()
@@ -24,6 +25,8 @@ app.use(
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'))
 }
+
+app.use('/api/v1/dealers', Dealer)
 
 app.use(auth)
 app.use(internetCheck)
