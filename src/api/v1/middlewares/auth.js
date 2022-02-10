@@ -19,6 +19,10 @@ const db = {
 export const internetCheck = async (req, res, next) => {
   const hospital = req.query.hospital
 
+  if (config(hospital).database === 'invalid' || !hospital) {
+    return res.status(500).json({ status: 500, message: 'Invalid hospital' })
+  }
+
   try {
     await sql.connect(config(hospital))
 
