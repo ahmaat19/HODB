@@ -66,7 +66,7 @@ export const auth = async (req, res, next) => {
     }
 
     await sql.connect(db)
-    const q = `SELECT * FROM Agent`
+    const q = `SELECT * FROM Agent WHERE Active = 'Yes'`
     const agent = await sql.query(q)
 
     if (agent && agent.recordset.length === 0) {
