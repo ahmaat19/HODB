@@ -34,7 +34,7 @@ export const internetCheck = async (req, res, next) => {
   } catch (error) {
     res.status(500).json({
       status: 500,
-      message: err.originalError.info.message,
+      message: error.originalError.info.message,
     })
   }
 }
