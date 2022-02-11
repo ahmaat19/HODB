@@ -1,11 +1,9 @@
 import asyncHandler from 'express-async-handler'
 import moment from 'moment'
-import sql from 'mssql'
-import config from '../../../../utils/dbConfig.js'
+import config from '../utils/dbConfig.js'
+import { get } from '../utils/pool-manager.js'
 
 const searchPatient = asyncHandler(async (req, res) => {
-  const hospital = req.query.hospital
-
   try {
     const search = req.query.search
     if (search.length < 5) {
@@ -14,12 +12,11 @@ const searchPatient = asyncHandler(async (req, res) => {
         message: 'Search must be at least 5 characters long',
       })
     }
-    await sql.connect(config(hospital))
-    const q = `
-  SELECT PatientID, Name, Gender, Tel, Status, Age, DateUnit, DOB FROM Patients
-  WHERE PatientID = '${search}' OR Tel = '${search}'
-  `
-    const result = await sql.query(q)
+    const pool = await get('TEST', config())
+    const result = await pool.request().query(
+      `SELECT PatientID, Name, Gender, Tel, Status, Age, DateUnit, DOB FROM Patients
+  WHERE PatientID = '${search}' OR Tel = '${search}'`
+    )
 
     const patients =
       result &&
@@ -32,8 +29,8 @@ const searchPatient = asyncHandler(async (req, res) => {
         Age: patient.Age + ' ' + patient.DateUnit,
         DOB: patient.DOB,
       }))
+    await pool.close()
     res.status(200).json({ total: patients.length, patients })
-    await sql.close()
   } catch (error) {
     console.log(error)
     return res.status(500).send(error)
@@ -60,9 +57,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
   }
 
   try {
-    const hospital = req.query.hospital
-
-    await sql.connect(config(hospital))
+    const pool1 = await get('TEST1', config())
 
     const patientQuery = `
       SELECT PatientID, Tel FROM Patients
@@ -73,7 +68,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
       WHERE DoctorID = '${DoctorID}' AND  Active = 'Yes' AND Doctor = 'Yes' AND WorkingDays LIKE '%${today}%'
       `
 
-    const patient = await sql.query(patientQuery)
+    const patient = await pool1.request().query(patientQuery)
 
     if (patient && patient.recordset.length === 0) {
       return res
@@ -81,7 +76,10 @@ const assignToDoctor = asyncHandler(async (req, res) => {
         .json({ status: 500, message: 'Invalid Patient ID' })
     }
 
-    const doctor = await sql.query(doctorQuery)
+    await pool1.close()
+
+    const pool2 = await get('TEST2', config())
+    const doctor = await pool2.request().query(doctorQuery)
 
     if (doctor && doctor.recordset.length === 0) {
       return res.status(500).json({ status: 500, message: 'Invalid Doctor ID' })
@@ -101,13 +99,15 @@ const assignToDoctor = asyncHandler(async (req, res) => {
           INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${appDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
           `
 
-    await sql.query(assignQuery)
+    await pool2.close()
+
+    const pool3 = await get('TEST3', config())
+    await pool3.request().query(assignQuery)
 
     res.status(201).json({
       status: 'Success',
       message: 'Patient Assigned to Doctor Successfully',
     })
-    await sql.close()
   } catch (error) {
     console.log(error)
     return res.status(500).send(error)
@@ -137,9 +137,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
   const today = moment().format('dddd')
 
   try {
-    const hospital = req.query.hospital
-
-    await sql.connect(config(hospital))
+    const pool1 = await get('TEST1', config())
 
     const lastRecordQuery = `
       SELECT TOP 1 PatientID FROM Patients ORDER BY SerialNo DESC
@@ -149,7 +147,8 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
       SELECT * FROM Doctors
       WHERE DoctorID = '${DoctorID}' AND  Active = 'Yes' AND Doctor = 'Yes' AND WorkingDays LIKE '%${today}%'
       `
-    const lastRecord = await sql.query(lastRecordQuery)
+
+    const lastRecord = await pool1.request().query(lastRecordQuery)
 
     if (lastRecord && lastRecord.recordset.length === 0) {
       return res
@@ -171,13 +170,19 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
           VALUES ('${newPatientID}', '${Name}', '${Gender}', ${Age}, '${Town}', '${Tel}', '${MaritalStatus}', '${City}', '${AppointmentDate}', '${DateAdded}', '${AddedBy}', '${DateUnit}', '${dateOfBirth}', '${newTempID}')
           `
 
-    const doctor = await sql.query(doctorQuery)
+    await pool1.close()
+
+    const pool2 = await get('TEST2', config())
+    const doctor = await pool2.request().query(doctorQuery)
 
     if (doctor && doctor.recordset.length === 0) {
       return res.status(500).json({ status: 500, message: 'Invalid Doctor ID' })
     }
 
-    await sql.query(newPatientQuery)
+    await pool2.close()
+
+    const pool3 = await get('TEST3', config())
+    await pool3.request().query(newPatientQuery)
 
     const doctorId = DoctorID
     const Cost = doctor.recordset[0].Cost
@@ -188,13 +193,15 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
           INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
           VALUES ('${newPatientID}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${AppointmentDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
           `
-    await sql.query(assignQuery)
+
+    await pool3.close()
+    const pool4 = await get('TEST4', config())
+    await pool4.request().query(assignQuery)
 
     res.status(201).json({
       status: 'Success',
       message: 'Patient Assigned to Doctor Successfully',
     })
-    await sql.close()
   } catch (error) {
     console.log(error)
     return res.status(500).send(error)
