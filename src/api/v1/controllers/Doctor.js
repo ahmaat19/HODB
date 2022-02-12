@@ -1,13 +1,14 @@
 import asyncHandler from 'express-async-handler'
 import moment from 'moment'
-import config from '../utils/dbConfig.js'
-import { get } from '../utils/pool-manager.js'
+import config from '../../../../utils/dbConfig.js'
+import { get } from '../../../../utils/pool-manager.js'
 
 const getDoctors = asyncHandler(async (req, res) => {
   const today = moment().format('dddd')
+  const hospital = req.query.hospital
 
   try {
-    const pool = await get('TEST', config())
+    const pool = await get(`${hospital}1`, config(hospital))
     const result = await pool
       .request()
       .query(

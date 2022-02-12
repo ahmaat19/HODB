@@ -3,13 +3,13 @@ import dotenv from 'dotenv'
 import colors from 'colors'
 import cors from 'cors'
 import morgan from 'morgan'
-import { errorHandler, notFound } from './api/v1/test/middlewares/errors.js'
+import { errorHandler, notFound } from './api/v1/middlewares/errors.js'
 
-import Town from './api/v1/test/routes/Town.js'
-import Doctor from './api/v1/test/routes/Doctor.js'
-import Patient from './api/v1/test/routes/Patient.js'
-import Dealer from './api/v1/test/routes/Dealer.js'
-import { authPool, internetCheckPool } from './api/v1/test/middlewares/auth.js'
+import Town from './api/v1/routes/Town.js'
+import Doctor from './api/v1/routes/Doctor.js'
+import Patient from './api/v1/routes/Patient.js'
+import Dealer from './api/v1/routes/Dealer.js'
+import { authPool, internetCheckPool } from './api/v1/middlewares/auth.js'
 
 dotenv.config()
 
@@ -37,16 +37,16 @@ app.use(function (req, res, next) {
 
 app.use('/api/v1/dealers', Dealer)
 
-// app.use(authPool)
+app.use(authPool)
 app.use(internetCheckPool)
 
 app.get('/', async (req, res) => {
   res.send('API is running')
 })
 
-app.use('/api/v1/test/towns', Town)
-app.use('/api/v1/test/doctors', Doctor)
-app.use('/api/v1/test/patients', Patient)
+app.use('/api/v1/towns', Town)
+app.use('/api/v1/doctors', Doctor)
+app.use('/api/v1/patients', Patient)
 
 app.use(notFound)
 

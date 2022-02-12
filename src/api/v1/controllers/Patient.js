@@ -1,9 +1,10 @@
 import asyncHandler from 'express-async-handler'
 import moment from 'moment'
-import config from '../utils/dbConfig.js'
-import { get } from '../utils/pool-manager.js'
+import config from '../../../../utils/dbConfig.js'
+import { get } from '../../../../utils/pool-manager.js'
 
 const searchPatient = asyncHandler(async (req, res) => {
+  const hospital = req.query.hospital
   try {
     const search = req.query.search
     if (search.length < 5) {
@@ -12,7 +13,7 @@ const searchPatient = asyncHandler(async (req, res) => {
         message: 'Search must be at least 5 characters long',
       })
     }
-    const pool = await get('TEST', config())
+    const pool = await get(`${hospital}1`, config())
     const result = await pool.request().query(
       `SELECT PatientID, Name, Gender, Tel, Status, Age, DateUnit, DOB FROM Patients
   WHERE PatientID = '${search}' OR Tel = '${search}'`
@@ -32,7 +33,6 @@ const searchPatient = asyncHandler(async (req, res) => {
     await pool.close()
     res.status(200).json({ total: patients.length, patients })
   } catch (error) {
-    console.log(error)
     return res.status(500).send(error)
   }
 })
@@ -48,6 +48,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
   } = req.body
 
   const today = moment().format('dddd')
+  const hospital = req.query.hospital
 
   if (PatientID.length < 5) {
     return res.status(404).json({
@@ -57,7 +58,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
   }
 
   try {
-    const pool1 = await get('TEST1', config())
+    const pool1 = await get(`${hospital}1`, config())
 
     const patientQuery = `
       SELECT PatientID, Tel FROM Patients
@@ -78,7 +79,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
 
     await pool1.close()
 
-    const pool2 = await get('TEST2', config())
+    const pool2 = await get(`${hospital}2`, config())
     const doctor = await pool2.request().query(doctorQuery)
 
     if (doctor && doctor.recordset.length === 0) {
@@ -101,7 +102,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
 
     await pool2.close()
 
-    const pool3 = await get('TEST3', config())
+    const pool3 = await get(`${hospital}3`, config())
     await pool3.request().query(assignQuery)
 
     res.status(201).json({
@@ -109,7 +110,6 @@ const assignToDoctor = asyncHandler(async (req, res) => {
       message: 'Patient Assigned to Doctor Successfully',
     })
   } catch (error) {
-    console.log(error)
     return res.status(500).send(error)
   }
 })
@@ -135,9 +135,10 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
   } = req.body
 
   const today = moment().format('dddd')
+  const hospital = req.query.hospital
 
   try {
-    const pool1 = await get('TEST1', config())
+    const pool1 = await get(`${hospital}1`, config())
 
     const lastRecordQuery = `
       SELECT TOP 1 PatientID FROM Patients ORDER BY SerialNo DESC
@@ -172,7 +173,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
     await pool1.close()
 
-    const pool2 = await get('TEST2', config())
+    const pool2 = await get(`${hospital}2`, config())
     const doctor = await pool2.request().query(doctorQuery)
 
     if (doctor && doctor.recordset.length === 0) {
@@ -181,7 +182,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
     await pool2.close()
 
-    const pool3 = await get('TEST3', config())
+    const pool3 = await get(`${hospital}3`, config())
     await pool3.request().query(newPatientQuery)
 
     const doctorId = DoctorID
@@ -195,7 +196,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
           `
 
     await pool3.close()
-    const pool4 = await get('TEST4', config())
+    const pool4 = await get(`${hospital}4`, config())
     await pool4.request().query(assignQuery)
 
     res.status(201).json({
@@ -203,7 +204,6 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
       message: 'Patient Assigned to Doctor Successfully',
     })
   } catch (error) {
-    console.log(error)
     return res.status(500).send(error)
   }
 })

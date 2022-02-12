@@ -1,8 +1,7 @@
 import asyncHandler from 'express-async-handler'
-import sql from 'mssql'
-import dotenv from 'dotenv'
-
-dotenv.config()
+import moment from 'moment'
+import config from '../../../../utils/dbConfig.js'
+import { get } from '../../../../utils/pool-manager.js'
 
 const db = {
   user: process.env.DEALER_DB_USER,
@@ -17,12 +16,12 @@ const db = {
 }
 const getDealers = asyncHandler(async (req, res) => {
   try {
-    await sql.connect(db)
-    const q = `SELECT * FROM Dealers WHERE Active = 'Yes'`
-    const result = await sql.query(q)
-
+    const pool = await get(`Dealer`, db)
+    const result = await pool
+      .request()
+      .query(`SELECT * FROM Dealers WHERE Active = 'Yes'`)
+    await pool.close()
     res.json({ total: result.recordset.length, dealers: result.recordset })
-    await sql.close()
   } catch (err) {
     res.status(500).json({
       status: 500,
@@ -35,9 +34,10 @@ const getDealer = asyncHandler(async (req, res) => {
   const id = req.params.id
   const code = Number(id)
   try {
-    await sql.connect(db)
-    const q = `SELECT * FROM Dealers WHERE Code = ${code} AND Active = 'Yes'`
-    const result = await sql.query(q)
+    const pool = await get(`Dealers`, db)
+    const result = await pool
+      .request()
+      .query(`SELECT * FROM Dealers WHERE Code = ${code} AND Active = 'Yes'`)
 
     if (result.recordset.length === 0) {
       return res.status(404).json({
@@ -45,8 +45,8 @@ const getDealer = asyncHandler(async (req, res) => {
         message: 'Dealer not found',
       })
     }
+    await pool.close()
     res.json(result.recordset[0])
-    await sql.close()
   } catch (err) {
     res.status(500).json({
       status: 500,

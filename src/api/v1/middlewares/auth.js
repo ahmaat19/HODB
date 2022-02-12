@@ -1,8 +1,8 @@
 import moment from 'moment'
-import config from '../utils/dbConfig.js'
+import config from '../../../../utils/dbConfig.js'
 import dotenv from 'dotenv'
 
-import { get } from '../utils/pool-manager.js'
+import { get } from '../../../../utils/pool-manager.js'
 
 dotenv.config()
 const db = {
@@ -43,8 +43,10 @@ export const authPool = async (req, res, next) => {
 }
 
 export const internetCheckPool = async (req, res, next) => {
+  const hospital = req.query.hospital
+
   try {
-    const pool = await get('TEST', config())
+    const pool = await get(`${hospital}1`, config(hospital))
     const result = await pool
       .request()
       .query(`SELECT InternetDate FROM InternetConnection`)
