@@ -13,7 +13,7 @@ const searchPatient = asyncHandler(async (req, res) => {
         message: 'Search must be at least 5 characters long',
       })
     }
-    const pool = await get(`${hospital}1`, config())
+    const pool = await get(`${hospital}1`, config(hospital))
     const result = await pool.request().query(
       `SELECT PatientID, Name, Gender, Tel, Status, Age, DateUnit, DOB FROM Patients
   WHERE PatientID = '${search}' OR Tel = '${search}'`
@@ -47,9 +47,11 @@ const assignToDoctor = asyncHandler(async (req, res) => {
     BookingTel,
   } = req.body
 
+  // console.log(req.body)
+
   const today = moment().format('dddd')
   const hospital = req.query.hospital
-
+  // console.log({ PatientID })
   if (PatientID.length < 5) {
     return res.status(404).json({
       status: 404,
@@ -58,7 +60,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
   }
 
   try {
-    const pool1 = await get(`${hospital}1`, config())
+    const pool1 = await get(`${hospital}1`, config(hospital))
 
     const patientQuery = `
       SELECT PatientID, Tel FROM Patients
@@ -79,7 +81,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
 
     await pool1.close()
 
-    const pool2 = await get(`${hospital}2`, config())
+    const pool2 = await get(`${hospital}2`, config(hospital))
     const doctor = await pool2.request().query(doctorQuery)
 
     if (doctor && doctor.recordset.length === 0) {
@@ -102,7 +104,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
 
     await pool2.close()
 
-    const pool3 = await get(`${hospital}3`, config())
+    const pool3 = await get(`${hospital}3`, config(hospital))
     await pool3.request().query(assignQuery)
 
     res.status(201).json({
@@ -138,7 +140,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
   const hospital = req.query.hospital
 
   try {
-    const pool1 = await get(`${hospital}1`, config())
+    const pool1 = await get(`${hospital}1`, config(hospital))
 
     const lastRecordQuery = `
       SELECT TOP 1 PatientID FROM Patients ORDER BY SerialNo DESC
@@ -173,7 +175,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
     await pool1.close()
 
-    const pool2 = await get(`${hospital}2`, config())
+    const pool2 = await get(`${hospital}2`, config(hospital))
     const doctor = await pool2.request().query(doctorQuery)
 
     if (doctor && doctor.recordset.length === 0) {
@@ -182,7 +184,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
     await pool2.close()
 
-    const pool3 = await get(`${hospital}3`, config())
+    const pool3 = await get(`${hospital}3`, config(hospital))
     await pool3.request().query(newPatientQuery)
 
     const doctorId = DoctorID
@@ -196,7 +198,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
           `
 
     await pool3.close()
-    const pool4 = await get(`${hospital}4`, config())
+    const pool4 = await get(`${hospital}4`, config(hospital))
     await pool4.request().query(assignQuery)
 
     res.status(201).json({

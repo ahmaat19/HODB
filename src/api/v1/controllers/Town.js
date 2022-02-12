@@ -5,7 +5,7 @@ import { get } from '../../../../utils/pool-manager.js'
 const getTowns = asyncHandler(async (req, res) => {
   const hospital = req.query.hospital
   try {
-    const pool = await get(`${hospital}`, config())
+    const pool = await get(`${hospital}`, config(hospital))
     const result = await pool.request().query(`SELECT TownID, Town FROM Town`)
 
     await pool.close()
