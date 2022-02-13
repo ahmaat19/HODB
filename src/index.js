@@ -9,7 +9,7 @@ import Town from './api/v1/routes/Town.js'
 import Doctor from './api/v1/routes/Doctor.js'
 import Patient from './api/v1/routes/Patient.js'
 import Dealer from './api/v1/routes/Dealer.js'
-import { authPool, internetCheckPool } from './api/v1/middlewares/auth.js'
+import { auth, internetCheck } from './api/v1/middlewares/auth.js'
 
 dotenv.config()
 
@@ -37,8 +37,8 @@ app.use(function (req, res, next) {
 
 app.use('/api/v1/dealers', Dealer)
 
-app.use(authPool)
-app.use(internetCheckPool)
+app.use(auth)
+app.use(internetCheck)
 
 app.get('/', async (req, res) => {
   res.send('API is running')

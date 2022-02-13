@@ -49,7 +49,6 @@ const assignToDoctor = asyncHandler(async (req, res) => {
 
   // console.log(req.body)
 
-  const today = moment().format('dddd')
   const hospital = req.query.hospital
   // console.log({ PatientID })
   if (PatientID.length < 5) {
@@ -60,6 +59,16 @@ const assignToDoctor = asyncHandler(async (req, res) => {
   }
 
   try {
+    const tommorow = moment().add(1, 'days').format('YYYY-MM-DD')
+    const aDate = moment(AppointmentDate).format('YYYY-MM-DD')
+
+    if (aDate > tommorow) {
+      return res.status(500).json({
+        status: 500,
+        message: 'Appointment Date cannot be grater than tomorrow',
+      })
+    }
+
     const pool1 = await get(`${hospital}1`, config(hospital))
 
     const patientQuery = `
@@ -67,9 +76,8 @@ const assignToDoctor = asyncHandler(async (req, res) => {
       WHERE PatientID = '${PatientID}'
       `
     const doctorQuery = `
-      SELECT DoctorID, Cost, UserName FROM Doctors
-      WHERE DoctorID = '${DoctorID}' AND  Active = 'Yes' AND Doctor = 'Yes' AND WorkingDays LIKE '%${today}%'
-      `
+      SELECT DoctorID, Cost, UserName, WorkingDays FROM Doctors
+      WHERE DoctorID = '${DoctorID}' AND  Active = 'Yes' AND Doctor = 'Yes'`
 
     const patient = await pool1.request().query(patientQuery)
 
@@ -86,6 +94,18 @@ const assignToDoctor = asyncHandler(async (req, res) => {
 
     if (doctor && doctor.recordset.length === 0) {
       return res.status(500).json({ status: 500, message: 'Invalid Doctor ID' })
+    }
+
+    const workingDays = doctor.recordset[0].WorkingDays
+
+    const day = moment(AppointmentDate).format('dddd')
+    const workingDaysArray = workingDays.split(',')
+
+    if (!workingDaysArray.includes(day)) {
+      return res.status(500).json({
+        status: 500,
+        message: `Doctor is not working on ${AppointmentDate}`,
+      })
     }
 
     const patientId = patient.recordset[0].PatientID
@@ -136,10 +156,19 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
     BookingTel,
   } = req.body
 
-  const today = moment().format('dddd')
   const hospital = req.query.hospital
 
   try {
+    const tommorow = moment().add(1, 'days').format('YYYY-MM-DD')
+    const aDate = moment(AppointmentDate).format('YYYY-MM-DD')
+
+    if (aDate > tommorow) {
+      return res.status(500).json({
+        status: 500,
+        message: 'Appointment Date cannot be grater than tomorrow',
+      })
+    }
+
     const pool1 = await get(`${hospital}1`, config(hospital))
 
     const lastRecordQuery = `
@@ -148,8 +177,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
     const doctorQuery = `
       SELECT * FROM Doctors
-      WHERE DoctorID = '${DoctorID}' AND  Active = 'Yes' AND Doctor = 'Yes' AND WorkingDays LIKE '%${today}%'
-      `
+      WHERE DoctorID = '${DoctorID}' AND  Active = 'Yes' AND Doctor = 'Yes'`
 
     const lastRecord = await pool1.request().query(lastRecordQuery)
 
@@ -180,6 +208,18 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
     if (doctor && doctor.recordset.length === 0) {
       return res.status(500).json({ status: 500, message: 'Invalid Doctor ID' })
+    }
+
+    const workingDays = doctor.recordset[0].WorkingDays
+
+    const day = moment(AppointmentDate).format('dddd')
+    const workingDaysArray = workingDays.split(',')
+
+    if (!workingDaysArray.includes(day)) {
+      return res.status(500).json({
+        status: 500,
+        message: `Doctor is not working on ${AppointmentDate}`,
+      })
     }
 
     await pool2.close()

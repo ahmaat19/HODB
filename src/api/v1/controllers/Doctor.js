@@ -12,7 +12,7 @@ const getDoctors = asyncHandler(async (req, res) => {
     const result = await pool
       .request()
       .query(
-        `select DoctorID, Name, Gender, Specialization, Cost, UserName, DoctorNo, OnlineDoctorNo from doctors WHERE Active = 'Yes' AND Doctor = 'Yes' AND WorkingDays LIKE '%${today}%'`
+        `select DoctorID, Name, Gender, Specialization, Cost, UserName, DoctorNo, OnlineDoctorNo, WorkingDays from doctors WHERE Active = 'Yes' AND Doctor = 'Yes' AND WorkingDays LIKE '%${today}%'`
       )
 
     await pool.close()

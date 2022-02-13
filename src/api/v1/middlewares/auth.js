@@ -17,7 +17,7 @@ const db = {
   },
 }
 
-export const authPool = async (req, res, next) => {
+export const auth = async (req, res, next) => {
   const apiKey = req.query.apiKey
   const hospital = req.query.hospital
 
@@ -42,7 +42,7 @@ export const authPool = async (req, res, next) => {
   }
 }
 
-export const internetCheckPool = async (req, res, next) => {
+export const internetCheck = async (req, res, next) => {
   const hospital = req.query.hospital
 
   try {
