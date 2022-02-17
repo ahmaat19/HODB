@@ -2,11 +2,27 @@ import asyncHandler from 'express-async-handler'
 import moment from 'moment'
 import config from '../../../../utils/dbConfig.js'
 import { get } from '../../../../utils/pool-manager.js'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const searchPatient = asyncHandler(async (req, res) => {
   const hospital = req.query.hospital
   try {
     const search = req.query.search
+
+    if (!search || search === '') {
+      return res.status(400).json({
+        status: 400,
+        message: 'Please enter a search term',
+      })
+    }
+
+    const searchArray = search.split('')
+    const noZero =
+      searchArray[0] === '0' ? searchArray.slice(1).join('') : search
+    const withZero = searchArray[0] === '0' ? search : '0' + search
+
     if (search.length < 5) {
       return res.status(404).json({
         status: 404,
@@ -16,7 +32,7 @@ const searchPatient = asyncHandler(async (req, res) => {
     const pool = await get(`${hospital}1`, config(hospital))
     const result = await pool.request().query(
       `SELECT PatientID, Name, Gender, Tel, Status, Age, DateUnit, DOB FROM Patients
-  WHERE PatientID = '${search}' OR Tel = '${search}'`
+  WHERE PatientID = '${search}' OR Tel = '${withZero}' OR Tel = '${noZero}'`
     )
 
     const patients =
@@ -61,6 +77,14 @@ const assignToDoctor = asyncHandler(async (req, res) => {
   try {
     const tommorow = moment().add(1, 'days').format('YYYY-MM-DD')
     const aDate = moment(AppointmentDate).format('YYYY-MM-DD')
+    const today = moment().format('YYYY-MM-DD')
+
+    if (aDate < today) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Appointment date cannot be in the past',
+      })
+    }
 
     if (aDate > tommorow) {
       return res.status(500).json({
@@ -68,6 +92,28 @@ const assignToDoctor = asyncHandler(async (req, res) => {
         message: 'Appointment Date cannot be grater than tomorrow',
       })
     }
+
+    const db = {
+      user: process.env.DEALER_DB_USER,
+      password: process.env.DEALER_DB_PASSWORD,
+      server: process.env.DEALER_DB_SERVER,
+      database: process.env.DEALER_DB_NAME,
+      port: Number(process.env.GLOBAL_DB_PORT),
+      options: {
+        encrypt: true,
+        trustServerCertificate: true,
+      },
+    }
+    const apiKey = req.query.apiKey
+    const pool0 = await get('getKey', db)
+    const keyResult = await pool0
+      .request()
+      .query(
+        `SELECT * FROM Agent WHERE Active = 'Yes' AND ApiKey = '${apiKey}'`
+      )
+
+    const AgentID = keyResult.recordset[0].ID
+    console.log({ AgentID })
 
     const pool1 = await get(`${hospital}1`, config(hospital))
 
@@ -161,6 +207,14 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
   try {
     const tommorow = moment().add(1, 'days').format('YYYY-MM-DD')
     const aDate = moment(AppointmentDate).format('YYYY-MM-DD')
+    const today = moment().format('YYYY-MM-DD')
+
+    if (aDate < today) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Appointment date cannot be in the past',
+      })
+    }
 
     if (aDate > tommorow) {
       return res.status(500).json({
@@ -168,6 +222,28 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
         message: 'Appointment Date cannot be grater than tomorrow',
       })
     }
+
+    const db = {
+      user: process.env.DEALER_DB_USER,
+      password: process.env.DEALER_DB_PASSWORD,
+      server: process.env.DEALER_DB_SERVER,
+      database: process.env.DEALER_DB_NAME,
+      port: Number(process.env.GLOBAL_DB_PORT),
+      options: {
+        encrypt: true,
+        trustServerCertificate: true,
+      },
+    }
+    const apiKey = req.query.apiKey
+    const pool0 = await get('getKey2', db)
+    const keyResult = await pool0
+      .request()
+      .query(
+        `SELECT * FROM Agent WHERE Active = 'Yes' AND ApiKey = '${apiKey}'`
+      )
+
+    const AgentID = keyResult.recordset[0].ID
+    console.log({ AgentID })
 
     const pool1 = await get(`${hospital}1`, config(hospital))
 
