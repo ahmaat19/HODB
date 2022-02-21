@@ -58,8 +58,6 @@ const searchDoctor = asyncHandler(async (req, res) => {
 const searchSpecializationsFromAllDoctors = asyncHandler(async (req, res) => {
   const hospital = req.query.hospital
 
-  console.log({ hospital })
-
   try {
     if (hospital === 'all') {
       const search = req.query.q
@@ -71,31 +69,42 @@ const searchSpecializationsFromAllDoctors = asyncHandler(async (req, res) => {
         })
       }
 
-      const query = async (hospital, search) => {
-        const r = hospital.map(async (name, index) => {
-          const result = await get(`${name}1`, config(name))
-            .request()
-            .query(
-              `SELECT DoctorID, Name, Gender, Specialization, Cost, UserName, DoctorNo, OnlineDoctorNo, WorkingDays FROM doctors WHERE DoctorID = '${search}' AND Active = 'Yes' AND Doctor = 'Yes'`
-            )
-
-          await result.close()
-          return result
+      if (search.length < 3) {
+        return res.status(400).json({
+          status: 400,
+          message: 'Please enter at least 3 characters',
         })
-        return r
       }
 
-      // let doctors = []
+      const query = async (hospital, search) => {
+        const pool = await get(`${hospital}1`, config(hospital))
+        const result = await pool
+          .request()
+          .query(
+            `SELECT DoctorID, Name, Gender, Specialization, Cost, UserName, DoctorNo, OnlineDoctorNo, WorkingDays FROM doctors WHERE Specialization LIKE '%${search}%' AND Active = 'Yes' AND Doctor = 'Yes'`
+          )
 
-      query(['ladnaan', 'test'], search).then((result) => {
-        // // console.log(result.recordset)
-        // doctors.push({
-        //   hospital: 'ladnaan',
-        //   doctor: result.recordset.length > 0 && result.recordset[0],
-        // })
-        res.status(200).json(result)
-      })
-      // res.status(200).json(doctors)
+        await pool.close()
+        return result.recordset
+      }
+
+      const hospitalArray = [
+        'test',
+        'ladnaan',
+        'gacal',
+        'aah',
+        'durdur',
+        // 'redsea',
+      ]
+
+      const result = await Promise.all(
+        hospitalArray.map(async (hospital) => {
+          const result = await query(hospital, search)
+          return { hospital, doctors: result }
+        })
+      )
+
+      res.status(200).json(result)
     }
   } catch (error) {
     return res.status(500).send(error)
