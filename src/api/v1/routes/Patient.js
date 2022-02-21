@@ -7,7 +7,7 @@ import {
 
 const router = express.Router()
 
-router.route('/').get(searchPatient)
+router.route('/search').get(searchPatient)
 router.route('/new').post(assignNewPatientToDoctor)
 router.route('/existing').post(assignToDoctor)
 

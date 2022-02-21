@@ -9,7 +9,7 @@ dotenv.config()
 const searchPatient = asyncHandler(async (req, res) => {
   const hospital = req.query.hospital
   try {
-    const search = req.query.search
+    const search = req.query.q
 
     if (!search || search === '') {
       return res.status(400).json({
