@@ -50,6 +50,7 @@ export const auth = async (req, res, next) => {
 
 export const internetCheck = async (req, res, next) => {
   const hospital = req.query.hospital
+  console.log({ hospital })
 
   if (hospital !== 'all') {
     try {
@@ -79,7 +80,7 @@ export const internetCheck = async (req, res, next) => {
     } catch (error) {
       res.status(500).json({
         status: 500,
-        message: error.originalError.info.message,
+        message: error.originalError,
       })
     }
   } else {

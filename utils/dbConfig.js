@@ -73,7 +73,19 @@ export default function config(hospital) {
         database: process.env.REDSEA_DB_NAME,
         port: Number(process.env.GLOBAL_DB_PORT),
         options: {
-          encrypt: true,
+          encrypt: false,
+          trustServerCertificate: true,
+        },
+      }
+    case 'mogcity':
+      return {
+        user: process.env.MOGCITY_DB_USER,
+        password: process.env.MOGCITY_DB_PASSWORD,
+        server: process.env.MOGCITY_DB_SERVER,
+        database: process.env.MOGCITY_DB_NAME,
+        port: Number(process.env.GLOBAL_DB_PORT),
+        options: {
+          encrypt: false,
           trustServerCertificate: true,
         },
       }

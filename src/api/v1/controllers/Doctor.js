@@ -18,7 +18,7 @@ const getDoctors = asyncHandler(async (req, res) => {
   } catch (err) {
     res.status(500).json({
       status: 500,
-      message: err.originalError.info.message,
+      message: err.originalError,
     })
   }
 })
@@ -94,7 +94,8 @@ const searchSpecializationsFromAllDoctors = asyncHandler(async (req, res) => {
         'gacal',
         'aah',
         'durdur',
-        // 'redsea',
+        'mogcity',
+        'redsea',
       ]
 
       const result = await Promise.all(

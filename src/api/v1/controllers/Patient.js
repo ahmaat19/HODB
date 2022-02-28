@@ -54,14 +54,14 @@ const searchPatient = asyncHandler(async (req, res) => {
 })
 
 const assignToDoctor = asyncHandler(async (req, res) => {
-  const {
-    PatientID,
-    DoctorID,
-    PatientType,
-    Booked,
-    AppointmentDate,
-    BookingTel,
-  } = req.body
+  const { PatientID, DoctorID, AppointmentDate, BookingTel } = req.body
+
+  if (!PatientID || !DoctorID || !AppointmentDate || !BookingTel) {
+    return res.status(400).json({
+      status: 400,
+      message: 'Please enter all fields',
+    })
+  }
 
   // console.log(req.body)
 
@@ -113,7 +113,6 @@ const assignToDoctor = asyncHandler(async (req, res) => {
       )
 
     const AgentID = keyResult.recordset[0].ID
-    console.log({ AgentID })
 
     const pool1 = await get(`${hospital}1`, config(hospital))
 
@@ -165,7 +164,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
     const AddedBy = 'Himilo'
 
     const assignQuery = `
-          INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) VALUES ('${patientId}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${appDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
+          INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Agent, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) VALUES ('${patientId}', '${doctorId}', '${UserName}', 'OutPatient', ${Cost}, ${AgentID}, '${appDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
           `
 
     await pool2.close()
@@ -190,19 +189,33 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
     DateUnit,
     DOB,
     Town,
-    Address,
     Tel,
     MaritalStatus,
-    City,
-
     DoctorID,
-    PatientType,
-    Booked,
     AppointmentDate,
     BookingTel,
   } = req.body
 
   const hospital = req.query.hospital
+
+  if (
+    !Name ||
+    !Gender ||
+    !Age ||
+    !DateUnit ||
+    !DOB ||
+    !Town ||
+    !Tel ||
+    !MaritalStatus ||
+    !DoctorID ||
+    !AppointmentDate ||
+    !BookingTel
+  ) {
+    return res.status(400).json({
+      status: 400,
+      message: 'Please enter all fields',
+    })
+  }
 
   try {
     const tommorow = moment().add(1, 'days').format('YYYY-MM-DD')
@@ -243,7 +256,6 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
       )
 
     const AgentID = keyResult.recordset[0].ID
-    console.log({ AgentID })
 
     const pool1 = await get(`${hospital}1`, config(hospital))
 
@@ -274,7 +286,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
     const newPatientQuery = `
         INSERT INTO Patients (PatientID, Name, Gender, Age, Town, Tel, MaritalStatus, City, Date, DateAdded, AddedBy, DateUnit, DOB, TempID) 
-          VALUES ('${newPatientID}', '${Name}', '${Gender}', ${Age}, '${Town}', '${Tel}', '${MaritalStatus}', '${City}', '${AppointmentDate}', '${DateAdded}', '${AddedBy}', '${DateUnit}', '${dateOfBirth}', '${newTempID}')
+          VALUES ('${newPatientID}', '${Name}', '${Gender}', ${Age}, '${Town}', '${Tel}', '${MaritalStatus}', 'MOGADISHU', '${AppointmentDate}', '${DateAdded}', '${AddedBy}', '${DateUnit}', '${dateOfBirth}', '${newTempID}')
           `
 
     await pool1.close()
@@ -309,8 +321,8 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
     const Status = 'New'
 
     const assignQuery = `
-          INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
-          VALUES ('${newPatientID}', '${doctorId}', '${UserName}', '${PatientType}', ${Cost}, '${AppointmentDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
+          INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Agent, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
+          VALUES ('${newPatientID}', '${doctorId}', '${UserName}', 'OutPatient', ${Cost}, ${AgentID} '${AppointmentDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
           `
 
     await pool3.close()
