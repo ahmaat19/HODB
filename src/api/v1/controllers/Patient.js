@@ -63,10 +63,8 @@ const assignToDoctor = asyncHandler(async (req, res) => {
     })
   }
 
-  // console.log(req.body)
-
   const hospital = req.query.hospital
-  // console.log({ PatientID })
+
   if (PatientID.length < 5) {
     return res.status(404).json({
       status: 404,
@@ -322,9 +320,8 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
 
     const assignQuery = `
           INSERT INTO DoctorAssignation (PatientID, DoctorID, UserName, PatientType, Cost, Agent, Date, Booked, AddedBy, DateAdded, Tel, Status, BookingTel) 
-          VALUES ('${newPatientID}', '${doctorId}', '${UserName}', 'OutPatient', ${Cost}, ${AgentID} '${AppointmentDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
+          VALUES ('${newPatientID}', '${doctorId}', '${UserName}', 'OutPatient', ${Cost}, ${AgentID}, '${AppointmentDate}', Null, '${AddedBy}', '${DateAdded}', '${Tel}', '${Status}', '${BookingTel}')
           `
-
     await pool3.close()
     const pool4 = await get(`${hospital}4`, config(hospital))
     await pool4.request().query(assignQuery)
