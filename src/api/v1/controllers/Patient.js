@@ -185,7 +185,6 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
     Gender,
     Age,
     DateUnit,
-    DOB,
     Town,
     Tel,
     MaritalStatus,
@@ -201,7 +200,6 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
     !Gender ||
     !Age ||
     !DateUnit ||
-    !DOB ||
     !Town ||
     !Tel ||
     !MaritalStatus ||
@@ -215,10 +213,19 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
     })
   }
 
+  if (DateUnit !== 'Years' && DateUnit !== 'Months' && DateUnit !== 'Days') {
+    return res.status(400).json({
+      status: 400,
+      message: 'Invalid Date Unit',
+    })
+  }
+
   try {
     const tommorow = moment().add(1, 'days').format('YYYY-MM-DD')
     const aDate = moment(AppointmentDate).format('YYYY-MM-DD')
     const today = moment().format('YYYY-MM-DD')
+
+    const DOB = moment().subtract(Age, DateUnit).format('YYYY-MM-DD')
 
     if (aDate < today) {
       return res.status(400).json({
@@ -280,11 +287,10 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
     const DateAdded = moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
 
     const AddedBy = 'Himilo'
-    const dateOfBirth = moment(DOB).format('YYYY-MM-DD')
 
     const newPatientQuery = `
         INSERT INTO Patients (PatientID, Name, Gender, Age, Town, Tel, MaritalStatus, City, Date, DateAdded, AddedBy, DateUnit, DOB, TempID) 
-          VALUES ('${newPatientID}', '${Name}', '${Gender}', ${Age}, '${Town}', '${Tel}', '${MaritalStatus}', 'MOGADISHU', '${AppointmentDate}', '${DateAdded}', '${AddedBy}', '${DateUnit}', '${dateOfBirth}', '${newTempID}')
+          VALUES ('${newPatientID}', '${Name}', '${Gender}', ${Age}, '${Town}', '${Tel}', '${MaritalStatus}', 'MOGADISHU', '${AppointmentDate}', '${DateAdded}', '${AddedBy}', '${DateUnit}', '${DOB}', '${newTempID}')
           `
 
     await pool1.close()
