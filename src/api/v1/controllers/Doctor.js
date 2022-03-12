@@ -10,7 +10,7 @@ const getDoctors = asyncHandler(async (req, res) => {
     const result = await pool
       .request()
       .query(
-        `select DoctorID, Name, Gender, Specialization, Cost, UserName, DoctorNo, OnlineDoctorNo, WorkingDays from doctors WHERE Active = 'Yes' AND Doctor = 'Yes'`
+        `select DoctorID, Name, Gender, Specialization, Cost, UserName, DoctorNo, OnlineDoctorNo, Limitation, WorkingDays from doctors WHERE Active = 'Yes' AND Doctor = 'Yes'`
       )
 
     await pool.close()
@@ -39,7 +39,7 @@ const searchDoctor = asyncHandler(async (req, res) => {
     const result = await pool
       .request()
       .query(
-        `SELECT DoctorID, Name, Gender, Specialization, Cost, UserName, DoctorNo, OnlineDoctorNo, WorkingDays FROM doctors WHERE DoctorID = '${search}' AND Active = 'Yes' AND Doctor = 'Yes'`
+        `SELECT DoctorID, Name, Gender, Specialization, Cost, UserName, DoctorNo, OnlineDoctorNo, Limitation, WorkingDays FROM doctors WHERE DoctorID = '${search}' AND Active = 'Yes' AND Doctor = 'Yes'`
       )
 
     await pool.close()
@@ -81,7 +81,7 @@ const searchSpecializationsFromAllDoctors = asyncHandler(async (req, res) => {
         const result = await pool
           .request()
           .query(
-            `SELECT DoctorID, Name, Gender, Specialization, Cost, UserName, DoctorNo, OnlineDoctorNo, WorkingDays FROM doctors WHERE Specialization LIKE '%${search}%' AND Active = 'Yes' AND Doctor = 'Yes'`
+            `SELECT DoctorID, Name, Gender, Specialization, Cost, UserName, DoctorNo, OnlineDoctorNo, Limitation, WorkingDays FROM doctors WHERE Specialization LIKE '%${search}%' AND Active = 'Yes' AND Doctor = 'Yes'`
           )
 
         await pool.close()

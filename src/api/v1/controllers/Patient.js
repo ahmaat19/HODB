@@ -73,7 +73,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
   }
 
   try {
-    const tommorow = moment().add(1, 'days').format('YYYY-MM-DD')
+    const tomorrow = moment().add(1, 'days').format('YYYY-MM-DD')
     const aDate = moment(AppointmentDate).format('YYYY-MM-DD')
     const today = moment().format('YYYY-MM-DD')
 
@@ -84,7 +84,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
       })
     }
 
-    if (aDate > tommorow) {
+    if (aDate > tomorrow) {
       return res.status(500).json({
         status: 500,
         message: 'Appointment Date cannot be grater than tomorrow',
@@ -119,7 +119,7 @@ const assignToDoctor = asyncHandler(async (req, res) => {
       WHERE PatientID = '${PatientID}'
       `
     const doctorQuery = `
-      SELECT DoctorID, Cost, UserName, WorkingDays FROM Doctors
+      SELECT DoctorID, Cost, UserName, WorkingDays, Limitation, DoctorNo, OnlineDoctorNo FROM Doctors
       WHERE DoctorID = '${DoctorID}' AND  Active = 'Yes' AND Doctor = 'Yes'`
 
     const patient = await pool1.request().query(patientQuery)
@@ -149,6 +149,28 @@ const assignToDoctor = asyncHandler(async (req, res) => {
         status: 500,
         message: `Doctor is not working on ${AppointmentDate}`,
       })
+    }
+
+    if (doctor.recordset[0].Limitation > 0) {
+      if (
+        aDate === today &&
+        doctor.recordset[0].DoctorNo >= doctor.recordset[0].Limitation
+      ) {
+        return res.status(500).json({
+          status: 500,
+          message: `Doctor has reached his limit on ${AppointmentDate}`,
+        })
+      }
+
+      if (
+        aDate === tomorrow &&
+        doctor.recordset[0].OnlineDoctorNo >= doctor.recordset[0].Limitation
+      ) {
+        return res.status(500).json({
+          status: 500,
+          message: `Doctor has reached his limit on ${AppointmentDate}`,
+        })
+      }
     }
 
     const patientId = patient.recordset[0].PatientID
@@ -221,7 +243,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
   }
 
   try {
-    const tommorow = moment().add(1, 'days').format('YYYY-MM-DD')
+    const tomorrow = moment().add(1, 'days').format('YYYY-MM-DD')
     const aDate = moment(AppointmentDate).format('YYYY-MM-DD')
     const today = moment().format('YYYY-MM-DD')
 
@@ -234,7 +256,7 @@ const assignNewPatientToDoctor = asyncHandler(async (req, res) => {
       })
     }
 
-    if (aDate > tommorow) {
+    if (aDate > tomorrow) {
       return res.status(500).json({
         status: 500,
         message: 'Appointment Date cannot be grater than tomorrow',
